@@ -68,6 +68,7 @@ button{font:inherit;color:inherit}
 .bump{animation:bump .35s ease}
 @keyframes bump{50%{transform:scale(1.25);color:var(--green)}}
 .floatUp{position:absolute;top:-6px;left:50%;transform:translateX(-50%);font-weight:900;color:var(--okDark);animation:floatUp 1.1s ease forwards;pointer-events:none;direction:ltr}
+.floatUp.minus{color:var(--bordo)}
 @keyframes floatUp{to{top:-34px;opacity:0}}
 
 /* ---------- פס ההוראה/שאלה ---------- */
@@ -122,6 +123,8 @@ svg .elbl{font-weight:400;font-size:21px;fill:var(--bordo);paint-order:stroke;st
 .askBox .aGo{font-size:18px;font-weight:800;color:var(--blue);margin-top:6px}
 .askBox.inline{position:static;transform:none;width:auto;margin:4px 6px 8px;box-shadow:none;padding:10px}
 .askBox.inline .aPair{font-size:36px}
+.askBox .aFb{margin-top:10px;padding:8px 12px;border-radius:14px;background:#8320580f;border:2px solid #83205833;color:var(--bordo);font-size:18px;font-weight:700;line-height:1.45;animation:bubIn .2s ease}
+.askBox .aFb .m{color:var(--blue)}
 .boardCard.asking{opacity:1}
 .boardCard.asking svg{opacity:.35}
 /* ---------- הצבה ---------- */
@@ -283,7 +286,7 @@ svg .elbl{font-weight:400;font-size:21px;fill:var(--bordo);paint-order:stroke;st
       <li><strong>בתור המחשב:</strong> המחשב שואל על זוג סדור, ואתם לוחצים על הנקודה הזאת בלוח שלכם.</li>
       <li><strong>פגיעה</strong> נותנת תור נוסף – גם לכם וגם למחשב.</li>
       <li><strong>הטבעתם צוללת?</strong> עונים כמה היא ארוכה: המרחק בין שתי הקצוות שלה.</li>
-      <li><strong>ניקוד:</strong> 10 לנקודה שסומנה נכון בפעם הראשונה, 20 לאורך נכון. <strong>רצף:</strong> תשובות נכונות ברצף.</li>
+      <li><strong>ניקוד:</strong> 10 לנקודה שסומנה נכון בפעם הראשונה, 20 לאורך נכון, ו־5 נקודות פחות על כל לחיצה שגויה על הלוח (עד שתיים בכל שאלה; הניקוד לא יורד מתחת ל־0). <strong>רצף:</strong> תשובות נכונות ברצף.</li>
       <li><strong>ניצחון:</strong> מי שמטביע ראשון את כל הצוללות של השני.</li>
     </ul>
     <div class="actions"><button id="helpClose" class="artBtn frameBtn"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMDAgODYiIHdpZHRoPSIzMDAiIGhlaWdodD0iODYiPgogIDxyZWN0IHg9IjMiIHk9IjMiIHdpZHRoPSIyOTQiIGhlaWdodD0iODAiIHJ4PSI4IiBmaWxsPSIjMTMzODYzIiAvPgogIDxyZWN0IHg9IjkiIHk9IjkiIHdpZHRoPSIyODIiIGhlaWdodD0iNjgiIHJ4PSI0IiBmaWxsPSJub25lIiBzdHJva2U9IiNGRkZGRkYiIHN0cm9rZS13aWR0aD0iMi41IiAvPgo8L3N2Zz4K" alt=""><span>חזרה למשחק</span></button></div>
@@ -324,7 +327,7 @@ svg .elbl{font-weight:400;font-size:21px;fill:var(--bordo);paint-order:stroke;st
   const R=5;                                   // הצירים מ־‎−5 עד 5
   const FLEET=[4,3,3,2,2,2,1,1,1,1];           // אורכים ביחידות – צי "על הנייר"
   const NAMES={4:'גדולה',3:'בינונית',2:'קטנה',1:'מיני'};
-  const PTS_PLOT=10, PTS_LEN=20, T_MIN=5, T_MAX=60, T_STEP=5;
+  const PTS_PLOT=10, PTS_LEN=20, PTS_MISS=5, T_MIN=5, T_MAX=60, T_STEP=5;
   let timerOn=false, timerSec=20;
   try{ const s=JSON.parse(localStorage.getItem('prismind-subs-settings')||'null'); if(s){ timerOn=!!s.on; timerSec=Math.min(T_MAX,Math.max(T_MIN,+s.sec||20)); } }catch(e){}
   const saveSet=()=>{ try{ localStorage.setItem('prismind-subs-settings',JSON.stringify({on:timerOn,sec:timerSec})); }catch(e){} };
@@ -404,7 +407,7 @@ svg .elbl{font-weight:400;font-size:21px;fill:var(--bordo);paint-order:stroke;st
       mk('text',{x:X(i),y:Y(0)+23,class:'num','text-anchor':'middle',direction:'ltr'},L.labels).textContent=i<0?MINUS+(-i):i;
       mk('text',{x:X(0)-9,y:Y(i)+6,class:'num','text-anchor':'end',direction:'ltr'},L.labels).textContent=i<0?MINUS+(-i):i;
     }
-    L.fx=mk('g',{},svg); L.ghost=mk('g',{opacity:0,'pointer-events':'none'},svg);
+    L.fx=mk('g',{},svg); L.miss=mk('g',{'pointer-events':'none'},svg); L.ghost=mk('g',{opacity:0,'pointer-events':'none'},svg);
     mk('circle',{cx:0,cy:0,r:15,fill:'#83205822'},L.ghost); mk('circle',{cx:0,cy:0,r:7,fill:'#fff',stroke:'#832058','stroke-width':3},L.ghost);
     return L;
   }
@@ -472,6 +475,14 @@ svg .elbl{font-weight:400;font-size:21px;fill:var(--bordo);paint-order:stroke;st
     score+=v; hud();
     const f=document.createElement('span'); f.className='floatUp'; f.textContent='+'+v; $('scoreChip').appendChild(f); setTimeout(()=>f.remove(),1100);
     const e=$('scoreVal'); e.classList.remove('bump'); void e.offsetWidth; e.classList.add('bump');
+  }
+  // הורדת נקודות על לחיצה שגויה – הניקוד לא יורד מתחת ל־0. מחזיר כמה ירד בפועל.
+  function loseScore(v){
+    const d=Math.min(v,score); if(!d) return 0;
+    score-=d; hud();
+    const f=document.createElement('span'); f.className='floatUp minus'; f.textContent='−'+d; $('scoreChip').appendChild(f); setTimeout(()=>f.remove(),1100);
+    const e=$('scoreVal'); e.classList.remove('bump'); void e.offsetWidth; e.classList.add('bump');
+    return d;
   }
   const good=()=>{ streak++; best=Math.max(best,streak); hud(); };
   const bad=()=>{ streak=0; hud(); };
@@ -698,9 +709,13 @@ svg .elbl{font-weight:400;font-size:21px;fill:var(--bordo);paint-order:stroke;st
     const host=narrow?$('meCard'):$('cpuCard');
     if(box.parentNode!==host) host.insertBefore(box,host.querySelector('svg'));
     box.classList.toggle('inline',narrow);
-    box.innerHTML=`<div class="aHead">המחשב שואל:</div><div class="aQ">יש לכם צוללת בנקודה</div><div class="aPair">${pairHTML(p)}</div><div class="aGo">לחצו על הנקודה בלוח שלכם ${narrow?'↓':'→'}</div>`;
+    box.innerHTML=`<div class="aHead">המחשב שואל:</div><div class="aQ">יש לכם צוללת בנקודה</div><div class="aPair">${pairHTML(p)}</div><div class="aGo">לחצו על הנקודה בלוח שלכם ${narrow?'↓':'→'}</div><div class="aFb" id="askFb" role="status" hidden></div>`;
     box.hidden=false; if(!narrow) $('cpuCard').classList.add('asking');
   }
+  // משוב על לחיצה שגויה – בתוך תיבת השאלה, לא על הלוח (כדי לא להסתיר נקודות)
+  function askFeedback(html){ const f=$('askFb'); if(!f) return; f.hidden=false; f.innerHTML=html; f.style.animation='none'; void f.offsetWidth; f.style.animation=''; }
+  function markMiss(p){ const x=X(p[0]), y=Y(p[1]), d=5;
+    const g=mk('g',{opacity:.7},LM.miss); [['#fff',6],['#832058',2.5]].forEach(([c,w])=>{ mk('path',{d:`M${x-d} ${y-d} L${x+d} ${y+d} M${x+d} ${y-d} L${x-d} ${y+d}`,stroke:c,'stroke-width':w,'stroke-linecap':'round',fill:'none'},g); }); }
   function hideAskBox(){ $('askBox').hidden=true; $('cpuCard').classList.remove('asking'); }
   function showAsk(on){
     LM.fx.innerHTML='';
@@ -718,12 +733,15 @@ svg .elbl{font-weight:400;font-size:21px;fill:var(--bordo);paint-order:stroke;st
     }
     if(plotTries===1){ st.plotAll++; bad(); }
     play('error');
+    const lost = plotTries<=2 ? loseScore(PTS_MISS) : 0;
+    const minus = lost ? ` <span class="m">−${lost}</span> נקודות.` : '';
     const err = same(p,[ask[1],ask[0]]) ? 'הסדר התהפך.' : (p[0]!==ask[0]&&Math.abs(p[0])===Math.abs(ask[0])&&p[1]===ask[1]) ? 'בדקו את הסימן של <span class="m"><i>x</i></span>.' : (p[1]!==ask[1]&&Math.abs(p[1])===Math.abs(ask[1])&&p[0]===ask[0]) ? 'בדקו את הסימן של <span class="m"><i>y</i></span>.' : '';
-    if(plotTries>=2){ showAsk(true); bubbleAt($('meCard'),meSvg,p,`לחצתם על ${pairHTML(p)}. ${err} הנקודה ${pairHTML(ask)} מסומנת – לחצו עליה.`); }
-    else bubbleAt($('meCard'),meSvg,p,`לחצתם על ${pairHTML(p)}. ${err} נסו שוב.`);
+    markMiss(p);
+    if(plotTries>=2){ showAsk(true); askFeedback(`לחצתם על ${pairHTML(p)}.${minus} ${err} הנקודה ${pairHTML(ask)} מסומנת בלוח – לחצו עליה.`); }
+    else askFeedback(`לחצתם על ${pairHTML(p)}.${minus} ${err} נסו שוב.`);
   });
   function resolveAsk(){
-    stopTimer(); busy=true; showAsk(false); hideAskBox();
+    stopTimer(); busy=true; showAsk(false); hideAskBox(); LM.miss.innerHTML='';
     const p=ask, s=shipAt(me,p), hit=!!s; ask=null;
     meShots.set(key(p),hit?'hit':'miss'); markShot(LM.marks,p,hit);
     let sunk=null;
